@@ -1,3 +1,4 @@
+'use strict'
 const test = require('tap').test
 const ReaddirStream = require('..')
 const compareEntry = require('./util/compareEntry')
@@ -135,7 +136,7 @@ test('destroy after first read', t => {
       })
     },
     readdir (name, opts, cb) {
-      var result
+      let result
       if (name === '/') {
         result = ['a', 'b']
       } else if (name === 'b') {
@@ -161,9 +162,9 @@ test('destroy after first read', t => {
 
 function readWithPause (t, stream, blocks) {
   return new Promise(resolve => {
-    var current = 0
-    var blockNr = 0
-    var entries = blocks.shift()
+    let current = 0
+    let blockNr = 0
+    let entries = blocks.shift()
     stream.on('data', entry => {
       if (entries.length === current) {
         t.fail(`Unexpected entry ${entry} in block#${blockNr}`)

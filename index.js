@@ -1,3 +1,4 @@
+'use strict'
 const path = require('path')
 const Readable = require('readable-stream').Readable
 

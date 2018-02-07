@@ -1,3 +1,4 @@
+'use strict'
 const hyperdrive = require('hyperdrive')
 const fs = require('fs')
 const os = require('os')
