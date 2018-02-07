@@ -2,6 +2,8 @@
 
 <a href="https://travis-ci.org/martinheidegger/dat-readdir-stream"><img src="https://travis-ci.org/martinheidegger/dat-readdir-stream.svg?branch=master" alt="Build Status"/></a>
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c4e876f726815686ab87/maintainability)](https://codeclimate.com/github/martinheidegger/dat-readdir-stream/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/c4e876f726815686ab87/test_coverage)](https://codeclimate.com/github/martinheidegger/dat-readdir-stream/test_coverage)
 
 `dat-readdir-stream` is a small util to read the file-table of a dat
 as a stream, rather than through `dat.readdir`.
