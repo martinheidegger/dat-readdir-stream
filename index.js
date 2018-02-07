@@ -1,5 +1,5 @@
 const path = require('path')
-const Readable = require('stream').Readable
+const Readable = require('readable-stream').Readable
 
 function readDir (archive, folder, recursive) {
   return cb => archive.readdir(folder, {recursive: recursive}, cb)
