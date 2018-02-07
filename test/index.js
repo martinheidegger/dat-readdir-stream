@@ -2,31 +2,32 @@ const test = require('tap').test
 const ReaddirStream = require('..')
 const { compareEntry, createArchive, getEntries } = require('./util')
 
-test('regular', async t => {
-  const archive = await createArchive(['a', 'b', 'c/', 'c/a'])
-  t.deepEquals(await getEntries(archive), ['/a', '/b', '/c/'])
-})
+test('regular', t =>
+  createArchive(['a', 'b', 'c/', 'c/a'])
+    .then(archive => getEntries(archive))
+    .then(entries => t.deepEquals(entries, ['/a', '/b', '/c/']))
+)
 
-test('regular, custom path', async t => {
-  const archive = await createArchive(['a', 'b', 'c/', 'c/a'])
-  const entries = await getEntries(archive, {cwd: ''})
-  t.deepEquals(entries, ['a', 'b', 'c/'])
-})
+test('regular, custom path', t =>
+  createArchive(['a', 'b', 'c/', 'c/a'])
+    .then(archive => getEntries(archive, {cwd: ''}))
+    .then(entries => t.deepEquals(entries, ['a', 'b', 'c/']))
+)
 
-test('single hierarchy', async t => {
-  const archive = await createArchive(['a', 'b', 'c'])
-  const entries = await getEntries(archive)
-  t.deepEquals(entries, ['/a', '/b', '/c'])
-})
+test('single hierarchy', t =>
+  createArchive(['a', 'b', 'c'])
+    .then(archive => getEntries(archive))
+    .then(entries => t.deepEquals(entries, ['/a', '/b', '/c']))
+)
 
-test('recursive', async t => {
-  const archive = await createArchive(['a', 'b', 'c/', 'c/a', 'd'])
-  const entries = await getEntries(archive, {recursive: true})
-  t.deepEquals(entries, ['/a', '/b', '/c/', '/d', '/c/a'])
-})
+test('recursive', t =>
+  createArchive(['a', 'b', 'c/', 'c/a', 'd'])
+    .then(archive => getEntries(archive, {recursive: true}))
+    .then(entries => t.deepEquals(entries, ['/a', '/b', '/c/', '/d', '/c/a']))
+)
 
-test('recursive + depthFirst', async t => {
-  const archive = await createArchive([
+test('recursive + depthFirst', t =>
+  createArchive([
     'a',
     'b',
     'c/',
@@ -35,12 +36,12 @@ test('recursive + depthFirst', async t => {
     'c/y',
     'd'
   ])
-  const entries = await getEntries(archive, {recursive: true, depthFirst: true})
-  t.deepEquals(entries, ['/a', '/b', '/c/', '/c/x/', '/c/x/1', '/c/y', '/d'])
-})
+    .then(archive => getEntries(archive, {recursive: true, depthFirst: true}))
+    .then(entries => t.deepEquals(entries, ['/a', '/b', '/c/', '/c/x/', '/c/x/1', '/c/y', '/d']))
+)
 
-test('recursive + maxDepth', async t => {
-  const archive = await createArchive([
+test('recursive + maxDepth', t =>
+  createArchive([
     'a/',
     'a/b',
     'a/c/',
@@ -49,50 +50,49 @@ test('recursive + maxDepth', async t => {
     'a/c/e/f',
     'o'
   ])
+    .then(archive =>
+      getEntries(archive, {recursive: true})
+        .then(entries => t.deepEquals(entries, [
+          '/a/',
+          '/o',
+          '/a/b',
+          '/a/c/',
+          '/a/c/d',
+          '/a/c/e/',
+          '/a/c/e/f'
+        ], 'default case = full depth'))
+        .then(() => getEntries(archive, {recursive: true, maxDepth: 1}))
+        .then(entries => t.deepEquals(entries, [
+          '/a/',
+          '/o',
+          '/a/b',
+          '/a/c/'
+        ], 'One depth should be one past the current director (else you would need to switch recursive=false'))
+        .then(() => getEntries(archive, {recursive: true, maxDepth: 2}))
+        .then(entries => t.deepEquals(entries, [
+          '/a/',
+          '/o',
+          '/a/b',
+          '/a/c/',
+          '/a/c/d',
+          '/a/c/e/'
+        ], 'Test with two levels'))
+    )
+)
 
-  t.deepEquals(await getEntries(archive, {recursive: true}), [
-    '/a/',
-    '/o',
-    '/a/b',
-    '/a/c/',
-    '/a/c/d',
-    '/a/c/e/',
-    '/a/c/e/f'
-  ], 'default case = full depth')
-
-  t.deepEquals(await getEntries(archive, {recursive: true, maxDepth: 1}), [
-    '/a/',
-    '/o',
-    '/a/b',
-    '/a/c/'
-  ], 'One depth should be one past the current director (else you would need to switch recursive=false')
-
-  t.deepEquals(await getEntries(archive, {recursive: true, maxDepth: 2}), [
-    '/a/',
-    '/o',
-    '/a/b',
-    '/a/c/',
-    '/a/c/d',
-    '/a/c/e/'
-  ], 'Test with two levels')
-})
-
-test('err .readdir', async t => {
+test('err .readdir', t => {
   const archive = {
     readdir (name, opts, cb) {
       t.is(name, '/', 'Correct folder requested')
       setImmediate(() => cb(new Error('error-test')))
     }
   }
-  try {
-    const entries = await getEntries(archive)
-    t.fail(`Unexpected data occured ${entries}`)
-  } catch (e) {
-    t.equals(e.message, 'error-test', 'Correct error thrown')
-  }
+  return getEntries(archive)
+    .then(entries => t.fail(`Unexpected data occured ${entries}`))
+    .catch(e => t.equals(e.message, 'error-test', 'Correct error thrown'))
 })
 
-test('err .stat', async t => {
+test('err .stat', t => {
   const archive = {
     stat (name, cb) {
       t.is(name, '/x', 'Stat called on correct item')
@@ -102,15 +102,12 @@ test('err .stat', async t => {
       setImmediate(() => cb(null, ['/x']))
     }
   }
-  try {
-    const entries = await getEntries(archive)
-    t.fail(`Unexpected data occured ${entries}`)
-  } catch (e) {
-    t.equals(e.message, 'error-test', 'Correct error thrown')
-  }
+  return getEntries(archive)
+    .then(entries => t.fail(`Unexpected data occured ${entries}`))
+    .catch(e => t.equals(e.message, 'error-test', 'Correct error thrown'))
 })
 
-test('destroy immediately', async t => {
+test('destroy immediately', t => {
   const archive = {
     readdir (name, opts, cb) {
       setImmediate(() => cb(null, ['/x']))
@@ -121,9 +118,10 @@ test('destroy immediately', async t => {
   stream.on('error', error => t.fail(`Unexpected error thrown ${error}`))
   stream.on('end', () => t.fail('unexpected end'))
   stream.destroy()
+  t.end()
 })
 
-test('destroy after first read', async t => {
+test('destroy after first read', t => {
   const archive = {
     stat (name, cb) {
       t.not(name, 'b/c', 'c is not expected as the stream should be destroyed by then')
@@ -156,10 +154,38 @@ test('destroy after first read', async t => {
   stream.on('error', error => t.fail(`Unexpected error thrown ${error}`))
   stream.on('end', () => t.fail('unexpected end'))
   stream.destroy()
+  t.end()
 })
 
-test('pause', async t => {
-  const archive = await createArchive([
+function readWithPause (t, stream, blocks) {
+  return new Promise(resolve => {
+    let current = 0
+    let blockNr = 0
+    let entries = blocks.shift()
+    stream.on('data', entry => {
+      if (entries.length === current) {
+        t.fail(`Unexpected entry ${entry} in block#${blockNr}`)
+        return
+      }
+      current = compareEntry(t, entries, current, entry)
+      if (!stream.isPaused() && blocks.length > 0 && entries.length > 0) {
+        stream.pause()
+        setTimeout(() => {
+          entries = entries.concat(blocks.shift())
+          blockNr += 1
+          stream.resume()
+        }, 200)
+      }
+    })
+    stream.on('error', e => t.fail(e))
+    stream.on('end', resolve)
+    stream.pause()
+    setTimeout(() => stream.resume(), 200)
+  })
+}
+
+test('pause', t =>
+  createArchive([
     'a',
     'b',
     'c/',
@@ -168,43 +194,18 @@ test('pause', async t => {
     'c/y',
     'd'
   ])
-
-  await readWithPause(new ReaddirStream(archive, {recursive: true}), [
-    ['/a', '/b', '/c/', '/d'],
-    ['/c/x/', '/c/y'],
-    ['/c/x/1']
-  ])
-
-  await readWithPause(new ReaddirStream(archive, {recursive: true, depthFirst: true}), [
-    ['/a', '/b', '/c/'],
-    ['/c/x/', '/c/x/1'],
-    ['/c/y', '/d']
-  ])
-
-  function readWithPause (stream, blocks) {
-    return new Promise(resolve => {
-      let current = 0
-      let blockNr = 0
-      let entries = blocks.shift()
-      stream.on('data', entry => {
-        if (entries.length === current) {
-          t.fail(`Unexpected entry ${entry} in block#${blockNr}`)
-          return
-        }
-        current = compareEntry(t, entries, current, entry)
-        if (!stream.isPaused() && blocks.length > 0 && entries.length > 0) {
-          stream.pause()
-          setTimeout(() => {
-            entries = entries.concat(blocks.shift())
-            blockNr += 1
-            stream.resume()
-          }, 200)
-        }
-      })
-      stream.on('error', e => t.fail(e))
-      stream.on('end', resolve)
-      stream.pause()
-      setTimeout(() => stream.resume(), 200)
-    })
-  }
-})
+    .then(archive =>
+      readWithPause(t, new ReaddirStream(archive, {recursive: true}), [
+        ['/a', '/b', '/c/', '/d'],
+        ['/c/x/', '/c/y'],
+        ['/c/x/1']
+      ])
+        .then(() =>
+          readWithPause(t, new ReaddirStream(archive, {recursive: true, depthFirst: true}), [
+            ['/a', '/b', '/c/'],
+            ['/c/x/', '/c/x/1'],
+            ['/c/y', '/d']
+          ])
+        )
+    )
+)
