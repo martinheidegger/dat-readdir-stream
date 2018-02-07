@@ -135,7 +135,7 @@ test('destroy after first read', t => {
       })
     },
     readdir (name, opts, cb) {
-      let result
+      var result
       if (name === '/') {
         result = ['a', 'b']
       } else if (name === 'b') {
@@ -161,9 +161,9 @@ test('destroy after first read', t => {
 
 function readWithPause (t, stream, blocks) {
   return new Promise(resolve => {
-    let current = 0
-    let blockNr = 0
-    let entries = blocks.shift()
+    var current = 0
+    var blockNr = 0
+    var entries = blocks.shift()
     stream.on('data', entry => {
       if (entries.length === current) {
         t.fail(`Unexpected entry ${entry} in block#${blockNr}`)
