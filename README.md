@@ -28,20 +28,20 @@ new ReaddirStream(archive[, opts])
 ```javascript
 const ReaddirStream = require('dat-readdir-stream')
 
-var stream = new ReaddirStream(archive, '/assets')
+var stream = new ReaddirStream(archive, { cwd: '/assets' })
 stream.on('data', ({location, stat}) => {
-  console.log(location) // => 'profile.png', 'styles.css'
+  console.log(location) // => '/assets/profile.png', '/assets/styles.css'
   console.log(stat.isDirectory()) // => false, false
 })
 
 var stream = new ReaddirStream(archive, { recursive: true })
 stream.on('data', ({location, stat}) => {
-  console.log(location) // => 'assets', 'index.html', 'assets/profile.png', 'assets/styles.css'
+  console.log(location) // => '/assets', '/index.html', '/assets/profile.png', '/assets/styles.css'
 })
 
 var stream = new ReaddirStream(archive, { recursive: true, depthFirst: true })
 stream.on('data', ({location, stat}) => {
-  console.log(location) // => 'assets', 'assets/profile.png', 'assets/styles.css', 'index.html'
+  console.log(location) // => '/assets', '/assets/profile.png', '/assets/styles.css', '/index.html'
 })
 ```
 
