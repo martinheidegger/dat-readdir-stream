@@ -1,6 +1,6 @@
-module.exports = function entryToString ({location, stat}) {
-  if (stat.isDirectory()) {
-    return `${location}/`
+module.exports = function entryToString (entry) {
+  if (entry.stat.isDirectory()) {
+    return `${entry.location}/`
   }
-  return location
+  return entry.location
 }

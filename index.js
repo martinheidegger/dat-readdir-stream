@@ -1,8 +1,8 @@
 const path = require('path')
-const { Readable } = require('stream')
+const Readable = require('stream').Readable
 
 function readDir (archive, folder, recursive) {
-  return cb => archive.readdir(folder, {recursive}, cb)
+  return cb => archive.readdir(folder, {recursive: recursive}, cb)
 }
 function stat (archive, location) {
   return cb => archive.stat(location, cb)
@@ -57,7 +57,9 @@ module.exports = class ReaddirStream extends Readable {
     if (this._queue.length === 0) {
       return this.push(null)
     }
-    const {location, depth} = this._queue.shift()
+    const entry = this._queue.shift()
+    const location = entry.location
+    const depth = entry.depth
     this._lock(stat(this._archive, location), stat => {
       this._locked++
       this.push({location, stat})

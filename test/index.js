@@ -1,6 +1,8 @@
 const test = require('tap').test
 const ReaddirStream = require('..')
-const { compareEntry, createArchive, getEntries } = require('./util')
+const compareEntry = require('./util/compareEntry')
+const createArchive = require('./util/createArchive')
+const getEntries = require('./util/getEntries')
 
 test('regular', t =>
   createArchive(['a', 'b', 'c/', 'c/a'])
