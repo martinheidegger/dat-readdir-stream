@@ -11,11 +11,11 @@ as a stream, rather than through `dat.readdir`.
 ### Usage 
 
 ```javascript
-new ReaddirStream(archive[, path, opts])
+new ReaddirStream(archive[, opts])
 ```
 
  - `archive` [Hyperdrive](https://github.com/mafintosh/hyperdrive) archive (object).
- - `path` Target directory path (string), defaults to `/`.
+ - `opts.cwd` Target directory path (string), defaults to `/`.
  - `opts.recursive` Read all subfolders and their files as well?
  - `opts.maxDepth` Limit the depth until which to look into folders.
  - `opts.depthFirst` Using a [depth-first search](https://en.wikipedia.org/wiki/Depth-first_search) instead of the default [breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search).

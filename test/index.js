@@ -9,7 +9,7 @@ test('regular', async t => {
 
 test('regular, custom path', async t => {
   const archive = await createArchive(['a', 'b', 'c/', 'c/a'])
-  const entries = await getEntries(archive, '')
+  const entries = await getEntries(archive, {cwd: ''})
   t.deepEquals(entries, ['a', 'b', 'c/'])
 })
 

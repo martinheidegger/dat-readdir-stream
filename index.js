@@ -9,26 +9,22 @@ function stat (archive, location) {
 }
 
 module.exports = class ReaddirStream extends Readable {
-  constructor (archive, name, opts) {
+  constructor (archive, opts) {
     super({
       objectMode: true
     })
-
-    if (name !== null && typeof name === 'object') {
-      opts = name
-      name = null
-    }
+    opts = Object.assign({
+      cwd: '/',
+      recursive: false,
+      depthFirst: false,
+      maxDepth: 0
+    }, opts)
 
     this._archive = archive
-
-    // Queue of the entries to check if they are a directory or not
-    this._queue = null
+    this._queue = null // Queue of the entries to check if they are a directory or not
     this._locked = 0
-
-    this._recursive = (opts && opts.recursive) || false
-    this._depthFirst = (opts && opts.depthFirst) || false
-    this._maxDepth = (opts && opts.maxDepth) || 0
-    this._readFolder(typeof name === 'string' ? name : '/', 0)
+    this._opts = opts
+    this._readFolder(opts.cwd, 0)
   }
   _lock (op, next) {
     this._locked++
@@ -47,13 +43,13 @@ module.exports = class ReaddirStream extends Readable {
     this._queue = null
   }
   _isTooDeep (depth) {
-    if (!this._recursive) {
+    if (!this._opts.recursive) {
       return true
     }
-    if (this._maxDepth === 0) {
+    if (this._opts.maxDepth === 0) {
       return false
     }
-    return depth >= this._maxDepth
+    return depth >= this._opts.maxDepth
   }
   _read () {
     if (this._destroyed) return
@@ -73,14 +69,14 @@ module.exports = class ReaddirStream extends Readable {
     })
   }
   _readFolder (folder, depth) {
-    this._lock(readDir(this._archive, folder, this._recursive), names => {
+    this._lock(readDir(this._archive, folder, this._opts.recursive), names => {
       names = names.map(name => ({
         depth,
         location: path.join(folder, name)
       }))
       if (!this._queue) {
         this._queue = names
-      } else if (this._depthFirst) {
+      } else if (this._opts.depthFirst) {
         this._queue = names.concat(this._queue)
       } else {
         this._queue = this._queue.concat(names)
