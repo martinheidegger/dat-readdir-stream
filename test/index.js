@@ -210,5 +210,11 @@ test('pause', t =>
             ['/c/y', '/d']
           ])
         )
-    )
+      )
+)
+
+test('It should sort the results per folder', t =>
+  createArchive(['b', 'a'])
+    .then(archive => getEntries(archive))
+    .then(entries => t.same(entries, ['/a', '/b']))
 )

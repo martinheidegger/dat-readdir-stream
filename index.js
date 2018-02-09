@@ -73,7 +73,7 @@ module.exports = class ReaddirStream extends Readable {
   }
   _readFolder (folder, depth) {
     this._lock(readDir(this._archive, folder, this._opts.recursive), names => {
-      names = names.map(name => ({
+      names = names.sort().map(name => ({
         depth,
         location: path.join(folder, name)
       }))
