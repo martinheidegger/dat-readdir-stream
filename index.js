@@ -1,12 +1,47 @@
 'use strict'
 const path = require('path')
 const Readable = require('readable-stream').Readable
+const Minimatch = require('minimatch').Minimatch
 
 function readDir (archive, folder, recursive) {
   return cb => archive.readdir(folder, {recursive: recursive}, cb)
 }
 function stat (archive, location) {
   return cb => archive.stat(location, cb)
+}
+function repeat (str, cnt) {
+  const all = []
+  for (let i = 0; i < cnt; i++) {
+    all.push(str)
+  }
+  return all.join('')
+}
+function createSimpleGlobPattern (glob, recursive, maxDepth) {
+  if (glob) {
+    return glob
+  }
+  if (!recursive) {
+    return '*'
+  }
+  maxDepth = parseInt(maxDepth, 10)
+  if (maxDepth > 0) {
+    let all = []
+    for (let i = 0; i < maxDepth; i++) {
+      all.push(`${repeat('*/', i + 1)}*`)
+    }
+    return `{*,${all.join(',')}}`
+  }
+  return '**/*'
+}
+function createGlobPattern (glob, recursive, maxDepth, cwd, globOpts) {
+  glob = createSimpleGlobPattern(glob, recursive, maxDepth)
+  if (!cwd || globOpts.matchBase) {
+    return glob
+  }
+  if (!/\/$/.test(cwd)) {
+    cwd += '/'
+  }
+  return `${cwd}${glob}`
 }
 
 module.exports = class ReaddirStream extends Readable {
@@ -18,9 +53,15 @@ module.exports = class ReaddirStream extends Readable {
       cwd: '/',
       recursive: false,
       depthFirst: false,
-      maxDepth: 0
+      maxDepth: 0,
+      globOpts: {},
+      glob: null
     }, opts)
 
+    this._match = new Minimatch(
+      createGlobPattern(opts.glob, opts.recursive, opts.maxDepth, opts.cwd, opts.globOpts),
+      opts.globOpts
+    )
     this._archive = archive
     this._queue = null // Queue of the entries to check if they are a directory or not
     this._locked = 0
@@ -43,15 +84,6 @@ module.exports = class ReaddirStream extends Readable {
     this._archive = null
     this._queue = null
   }
-  _isTooDeep (depth) {
-    if (!this._opts.recursive) {
-      return true
-    }
-    if (this._opts.maxDepth === 0) {
-      return false
-    }
-    return depth >= this._opts.maxDepth
-  }
   _read () {
     if (this._destroyed) return
     if (this._locked) return // Pause processing as long as data is beeing fetched
@@ -62,10 +94,13 @@ module.exports = class ReaddirStream extends Readable {
     const location = entry.location
     const depth = entry.depth
     this._lock(stat(this._archive, location), stat => {
-      this._locked++
-      this.push({location, stat})
-      this._locked--
-      if (stat.isDirectory() && !this._isTooDeep(depth)) {
+      const isMatch = this._match.match(location)
+      if (isMatch || stat.isDirectory()) {
+        this._locked++
+        this.push({location, stat})
+        this._locked--
+      }
+      if (stat.isDirectory()) {
         return this._readFolder(location, depth + 1)
       }
       this._read()
@@ -77,6 +112,9 @@ module.exports = class ReaddirStream extends Readable {
         depth,
         location: path.join(folder, name)
       }))
+      if (!this._match.options.matchBase) {
+        names = names.filter(entry => this._match.match(entry.location, true))
+      }
       if (!this._queue) {
         this._queue = names
       } else if (this._opts.depthFirst) {

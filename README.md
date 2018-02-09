@@ -17,6 +17,8 @@ new ReaddirStream(archive[, opts])
 ```
 
  - `archive` [Hyperdrive](https://github.com/mafintosh/hyperdrive) archive (object).
+ - `opts.glob` Do a [glob match](https://en.wikipedia.org/wiki/Glob_(programming)) over a folder (string).
+ - `opts.globOpts` Options passed to [Minimatch](https://github.com/isaacs/minimatch#options) (object).
  - `opts.cwd` Target directory path (string), defaults to `/`.
  - `opts.recursive` Read all subfolders and their files as well?
  - `opts.maxDepth` Limit the depth until which to look into folders.
