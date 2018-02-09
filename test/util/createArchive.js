@@ -1,13 +1,11 @@
 'use strict'
 const hyperdrive = require('hyperdrive')
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
+const ram = require('random-access-memory')
 const bb = require('bluebird')
 
 module.exports = names => {
   names = names || []
-  const archive = hyperdrive(fs.mkdtempSync(path.join(os.tmpdir(), 'dat-readdir-stream')))
+  const archive = hyperdrive(ram)
 
   return bb.mapSeries(names, name =>
     new Promise((resolve, reject) => {
