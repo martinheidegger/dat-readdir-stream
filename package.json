@@ -28,7 +28,6 @@
     "tap": "^11.1.0"
   },
   "dependencies": {
-    "flexlock": "^1.1.0",
     "minimatch": "^3.0.4",
     "readable-stream": "^2.3.3"
   },
