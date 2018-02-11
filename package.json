@@ -1,6 +1,6 @@
 {
   "name": "dat-readdir-stream",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "dat-readdir-stream is a small util to read the file-table of a dat as a stream, rather than through dat.readdir.",
   "main": "index.js",
   "scripts": {
